@@ -1,0 +1,243 @@
+#! /usr/bin/env python
+# Data format: (minv, quantity, portion)
+
+import sys,os,stat,pickle,time,math
+
+# Check if two arguments are given
+lgt=len(sys.argv)
+if lgt !=3:
+ print 'Usage: a4t [-i / -a / -c] [task]'
+ exit(0)
+
+# Check if first argument is a valid option
+opt=sys.argv[1]
+if opt not in ['-i', '-a', '-c']:
+ print 'Usage: a4t [-i / -a / -c] [task].\nOptions are either -i (initialize), -a (aim), -c (completed)'
+ exit(0)
+
+# Get project name and the paths
+fname=sys.argv[2]
+dname=os.path.expanduser('~/.a4t')
+fullpname=dname+'/'+fname+'.pkl'
+fullhname=dname+'/'+fname+'.txt'
+
+######
+# Initializing mode: -i
+if opt == '-i':
+
+ # If file is already there: only changing min value.
+ if os.path.isfile(fullpname) or os.path.isfile(fullhname):
+  print 'The file', fname, 'exists, can only change the minimum value. (Remove in',dname, 'to open a new task.)'
+  f=open(fullpname, 'r')
+  data=pickle.load(f)
+  f.close
+  minv=data[0]
+
+  while True:
+   print 'The minimum quantity for this task was:', minv,'.'
+   inp=raw_input('Please enter the new minimum quantity: ')
+   if inp == "":
+    inp=minv
+   try:
+    newminv=int(inp)
+    if newminv >=0:
+     break
+    else:
+     print 'Please enter a non-negative integer'
+   except ValueError:
+    print 'Please enter a non-negative integer'
+
+  data[0]=newminv
+ 
+  p=open(fullpname, 'w')
+  pickle.dump(data, p)
+  p.close
+ 
+ # Write to history file
+  h=open(fullhname, 'a')
+  towrite=time.strftime("%Y.%m.%d %a, %H:%M:%S")+' changed minimal value to '+str(newminv)+'\n'
+  h.write(towrite)
+  h.close
+ 
+  print 'Min value changed to', newminv,'for task', fname, 'in', dname
+ 
+  exit(0)
+
+# Create dir if not present
+ if not os.path.isdir(dname):
+  print 'Creating', dname
+  os.makedirs(dname)
+  os.chmod(dname, stat.S_IRWXU)
+
+# Ask questions
+# First minv
+ while True:
+  inp=raw_input('Please enter the minimum quantity you want to keep for this task (default: 0) ')
+  if inp == "":
+   inp=0
+  try:
+   minv=int(inp)
+   if minv >=0:
+    break
+   else:
+    print 'Please enter a non-negative integer'
+  except ValueError:
+   print 'Please enter a non-negative integer'
+ 
+# Then quantity
+ while True:
+  inp=raw_input('Please enter how many of this task you currently have (default: 0) ')
+  if inp == "":
+   inp=0
+  try:
+   quantity=int(inp)
+   if quantity >=0:
+    break
+   else:
+    print 'Please enter a non-negative integer'
+  except ValueError:
+   print 'Please enter a non-negative integer'
+ 
+# Then portion
+ while True:
+  inp=raw_input('Please enter the approximate quantity of this task per day (default: 1) ')
+  if inp == "":
+   inp=1
+  try:
+   portion=int(inp)
+   if portion > 0:
+    break
+   else:
+    print 'Please enter a positive integer'
+  except ValueError:
+   print 'Please enter a positive integer'
+ 
+# Write data out to pkl file
+ data=[0, 0, 0]
+ data[0]=minv
+ data[1]=quantity
+ data[2]=portion
+
+ p=open(fullpname, 'w')
+ pickle.dump(data, p)
+ p.close
+
+# Write to history file
+ h=open(fullhname, 'w')
+ towrite=time.strftime("%Y.%m.%d %a, %H:%M:%S")+' initialized with minimal value '+str(minv)+', quantity '+str(quantity)+', portion '+str(portion)+'\n'
+ h.write(towrite)
+ h.close
+
+ print 'Task', fname, 'succesfully initialized in', dname
+
+######
+# Aim mode: -a
+if opt == '-a':
+
+# Test if files are there ok
+ if not os.path.isfile(fullpname) or not os.path.isfile(fullhname):
+  if not os.path.isfile(fullpname):
+   print 'The file', fullpname, 'is missing!'
+  if not os.path.isfile(fullhname):
+   print 'The file', fullhname, 'is missing!'
+  exit(0)
+
+# Read pickle file
+ f=open(fullpname, 'r')
+ data=pickle.load(f)
+ f.close
+ minv=data[0]
+ oldportion=data[2]
+
+# Input current quantity
+ while True:
+  inp=raw_input('Please enter how many of this task you have before processing: ')
+  try:
+   quantity=int(inp)
+   if quantity >=0:
+    break
+   else:
+    print 'Please enter a non-negative integer'
+  except ValueError:
+   print 'Please enter a non-negative integer'
+ 
+# Compute and print aim for today
+ aim=quantity-oldportion
+ if aim<minv:
+  aim=minv
+ print 'Aim for today:', int(aim)
+
+######
+# Completed mode: -c
+if opt == '-c':
+
+# Test if files are there ok
+ if not os.path.isfile(fullpname) or not os.path.isfile(fullhname):
+  if not os.path.isfile(fullpname):
+   print 'The file', fullpname, 'is missing!'
+  if not os.path.isfile(fullhname):
+   print 'The file', fullhname, 'is missing!'
+  exit(0)
+
+# Read pickle file
+ f=open(fullpname, 'r')
+ data=pickle.load(f)
+ f.close
+ minv=data[0]
+ oldquantity=data[1]
+ oldportion=data[2]
+
+# Input completed quantity
+ while True:
+  inp=raw_input('Please enter how many of this task you have left after processing: ')
+  try:
+   quantity=int(inp)
+   if quantity >=0:
+    break
+   else:
+    print 'Please enter a non-negative integer'
+  except ValueError:
+   print 'Please enter a non-negative integer'
+ 
+# Compute the new portion
+ ratio=float(quantity-minv+0.5)/(oldquantity-minv+0.5)
+
+ #print 'ratio=%f, quantity=%d, oldquantity=%d' % (ratio, quantity, oldquantity)
+ factor=ratio-0.95+1
+ if factor>1.1:
+  factor=1.1
+ if factor<0.92 or quantity<=minv:
+  factor=0.92
+ portion=oldportion*factor
+ portionint=int(math.ceil(portion))
+
+ print oldquantity, '-->', quantity, '\nTomorrow\'s portion will be', portionint
+ inp=raw_input('Does it look fine? y/n: ')
+ try:
+  if inp == 'y':
+ 
+# Write data out to pkl file
+   data=[0, 0, 0.0]
+   data[0]=minv
+   data[1]=quantity
+   data[2]=portion
+ 
+   p=open(fullpname, 'w')
+   pickle.dump(data, p)
+   p.close
+ 
+# Write to history file
+   h=open(fullhname, 'a')
+   towrite=time.strftime("%Y.%m.%d %a, %H:%M:%S")+' minimal value '+str(minv)+', quantity '+str(quantity)+', portion '+str(portion)+'\n'
+   h.write(towrite)
+   h.close
+ 
+# Cat history file
+   h=open(fullhname, 'r')
+   print h.read()
+   h.close
+
+  else:
+   print 'I haven\'t done anything'
+ except:
+  print 'I haven\'t done anything'

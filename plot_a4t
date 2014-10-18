@@ -1,0 +1,59 @@
+#!/bin/bash
+# 2014.07.14
+# Usage: plot_a4t a4t file (with no dir, no extension)
+
+infile="$HOME/.a4t/$1.txt"
+
+if [ ! -f $infile ] ; then
+ echo "Can't find the file $infile."
+ exit
+fi
+
+k=v3$elej`date +%N`
+mkdir /tmp/$k
+chmod 700 /tmp/$k/
+
+cat "$infile" |
+
+awk '{
+if (($10 + 0 == $10) && (NF == 10)) {
+  print($8"	"$10)
+ }
+}' |
+
+sed 's/,//g' |
+
+awk ' BEGIN {
+ line=1
+}
+{
+ print(line"	"$1"	"$2)
+ line=line+1
+}' > /tmp/$k/$1.gtxt
+
+cd /tmp/$k
+
+gnuplot -persist <<EOF
+set autoscale y
+set autoscale y2
+set ytics nomirror
+set xtics nomirror
+plot "$1.gtxt" using 1:2 with lines notitle axes x1y1, "$1.gtxt" using 1:3 with lines notitle axes x2y2
+EOF
+
+gnuplot -persist <<EOF
+set ytics nomirror
+set xtics nomirror
+plot "$1.gtxt" using 1:2 with lines notitle, "$1.gtxt" using 1:3 with lines notitle
+EOF
+
+
+cd -
+
+l=1
+while [ -n "$l" ]; do
+ sleep 1
+ l=`lsof +d /tmp/$k`
+done
+
+rm -f -R /tmp/$k
