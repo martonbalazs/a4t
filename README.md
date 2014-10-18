@@ -25,7 +25,7 @@ First open a terminal and type in
 
 a4t -i [task name]
 
-where [task name] can be e.g. "myemails" This will create a ~/.a4t directory
+where [task name] can be e.g. "myemails". This will create a ~/.a4t directory
 and puts in it some log files about your task. To ask the script about today's
 aim, type
 
