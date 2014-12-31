@@ -23,18 +23,24 @@ the script decreases the daily load but at most by 8%.
 
 First open a terminal and type in
 
+```
 a4t -i [task name]
+```
 
 where [task name] can be e.g. "myemails". This will create a ~/.a4t directory
 and puts in it some log files about your task. To ask the script about today's
 aim, type
 
+```
 a4t -a [task name]
+```
 
 and type in how many emails you have now. The script then tells you your goal
 for today. Once that's achieved, type
 
+```
 a4t -c [task name]
+```
 
 and when asked, proudly enter where you have just ended up with your task.
 
