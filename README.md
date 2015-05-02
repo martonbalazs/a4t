@@ -32,17 +32,12 @@ and puts in it some log files about your task. To ask the script about today's
 aim, type
 
 ```
-a4t -a [task name]
+a4t [task name]
 ```
 
 and type in how many emails you have now. The script then tells you your goal
-for today. Once that's achieved, type
-
-```
-a4t -c [task name]
-```
-
-and when asked, proudly enter where you have just ended up with your task.
+for today. Try to achieve that and, when asked, proudly enter where you have
+just ended up with your task.
 
 If you have Gnuplot installed, then plot_a4t gives you a graphical feedback on
 how the quantity of this task evolved in time.
