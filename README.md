@@ -19,7 +19,7 @@ The algorithm is simple: if the number of emails decreased by 5% since
 yesterday then the script is happy, and keeps your daily load constant. If it
 decreased less, or even increased, then it increases your daily load but only
 by 10% at most. If the decrease is more than 5% than we are even happier and
-the script decreases the daily load but at most by 1% (this is rather strict).
+the script decreases the daily load but at most by 2% (this is rather strict).
 
 First open a terminal and type in
 
