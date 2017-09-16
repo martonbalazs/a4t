@@ -191,8 +191,9 @@ ratio=float(quantity-minv+0.5)/(oldquantity-minv+0.5)
 factor=ratio-0.95+1
 if factor>1.1:
  factor=1.1
-if factor<0.92 or quantity<=minv:
- factor=0.92
+# Notice: the number below is essential. 10% up and 2% down means a peak every 5th day or more rarely can cause long lasting non-empty task-stack. Seems good fun for weekly fluctuating less important stuff and daily fluctuating more important ones which then get cleaned more often?
+if factor<0.98 or quantity<=minv:
+ factor=0.98
 portion=oldportion*factor
 portionint=int(math.ceil(portion))
 
