@@ -1,38 +1,39 @@
-#! /usr/bin/env python2
-# Data format: (minv, quantity, portion)
+#! /usr/bin/env python3
+# Data format: (minv, quantity, portion, optional dir relative to $HOME/)
 
 import sys,os,stat,pickle,time,math
 
 # Check if two arguments are given
 lgt=len(sys.argv)
 if lgt > 3 or lgt == 1:
- print 'Usage: a4t [-i] [task]'
+ print('Usage: a4t [-i] [task]')
  exit(0)
 
 if lgt == 3:
 # Check if first argument is a valid option
  opt=sys.argv[1]
- if opt not in ['-i']:
-  print 'Usage: a4t [-i] [task].\nOptions are either -i (initialize), or none'
+ if opt not in ['-i', '-d']:
+  print('Usage: a4t [-i, -d] [task].\nOptions are either -i (initialize), -d (use directory count), or none')
   exit(0)
 
+if sys.argv[1] == '-i':
 # Get project name and the paths
  fname=sys.argv[2]
  dname=os.path.expanduser('~/.a4t')
  fullpname=dname+'/'+fname+'.pkl'
  fullhname=dname+'/'+fname+'.txt'
 
- # If file is already there: only changing min value.
+ # If file is already there: only changing min value and counting dir.
  if os.path.isfile(fullpname) or os.path.isfile(fullhname):
-  print 'The file', fname, 'exists, can only change the minimum value. (Remove in',dname, 'to open a new task.)'
-  f=open(fullpname, 'r')
+  print('The file', fname, 'exists, can only change the minimum value or the counting dir. (Remove in',dname, 'to open a new task.)')
+  f=open(fullpname, 'rb')
   data=pickle.load(f)
   f.close
   minv=data[0]
 
   while True:
-   print 'The minimum quantity for this task was:', minv,'.'
-   inp=raw_input('Please enter the new minimum quantity: ')
+   print('The minimum quantity for this task was:', minv,'.')
+   inp=input('Please enter the new minimum quantity: ')
    if inp == "":
     inp=minv
    try:
@@ -40,13 +41,37 @@ if lgt == 3:
     if newminv >=0:
      break
     else:
-     print 'Please enter a non-negative integer'
+     print('Please enter a non-negative integer')
    except ValueError:
-    print 'Please enter a non-negative integer'
+    print('Please enter a non-negative integer')
 
   data[0]=newminv
+# Changing dir if we have one
+  try:
+   print('Using dir', data[3])
+  except:
+   print('No directory to count initiated, you can set one up with the -d option.')
+  else:
+   dirch=input('Change it? (c)')
+   if dirch == 'c':
+    data[3]=input('Please enter directory to count (relative to your home): ')
+# Check if dir is valid
+   while True:
+    dircname=os.path.expanduser('~/'+data[3]+'/')
+    if os.path.isdir(dircname):
+     break
+    else:
+     direx=input(dircname, 'doesn\'t exist, exit (x)?')
+     if direx == 'x':
+      exit(0)
+     data[3]=input('Please enter directory to count (relative to your home): ')
+
+   try:
+    print('Dir to count is set as', data[3], '.')
+   except:
+    print('No dir to count is set.')
  
-  p=open(fullpname, 'w')
+  p=open(fullpname, 'wb')
   pickle.dump(data, p)
   p.close
  
@@ -56,20 +81,20 @@ if lgt == 3:
   h.write(towrite)
   h.close
  
-  print 'Min value changed to', newminv,'for task', fname, 'in', dname
+  print('Min value changed to', newminv,'for task', fname, 'in', dname)
  
   exit(0)
 
 # Create dir if not present
  if not os.path.isdir(dname):
-  print 'Creating', dname
+  print('Creating', dname)
   os.makedirs(dname)
   os.chmod(dname, stat.S_IRWXU)
 
 # Ask questions
 # First minv
  while True:
-  inp=raw_input('Please enter the minimum quantity you want to keep for this task (default: 0) ')
+  inp=input('Please enter the minimum quantity you want to keep for this task (default: 0) ')
   if inp == "":
    inp=0
   try:
@@ -77,13 +102,13 @@ if lgt == 3:
    if minv >=0:
     break
    else:
-    print 'Please enter a non-negative integer'
+    print('Please enter a non-negative integer')
   except ValueError:
-   print 'Please enter a non-negative integer'
+   print('Please enter a non-negative integer')
  
 # Then quantity
  while True:
-  inp=raw_input('Please enter how many of this task you currently have (default: 0) ')
+  inp=input('Please enter how many of this task you currently have (default: 0) ')
   if inp == "":
    inp=0
   try:
@@ -91,13 +116,13 @@ if lgt == 3:
    if quantity >=0:
     break
    else:
-    print 'Please enter a non-negative integer'
+    print('Please enter a non-negative integer')
   except ValueError:
-   print 'Please enter a non-negative integer'
+   print('Please enter a non-negative integer')
  
 # Then portion
  while True:
-  inp=raw_input('Please enter the approximate quantity of this task per day (default: 1) ')
+  inp=input('Please enter the approximate quantity of this task per day (default: 1) ')
   if inp == "":
    inp=1
   try:
@@ -105,9 +130,9 @@ if lgt == 3:
    if portion > 0:
     break
    else:
-    print 'Please enter a positive integer'
+    print('Please enter a positive integer')
   except ValueError:
-   print 'Please enter a positive integer'
+   print('Please enter a positive integer')
  
 # Write data out to pkl file
  data=[0, 0, 0]
@@ -115,7 +140,8 @@ if lgt == 3:
  data[1]=quantity
  data[2]=portion
 
- p=open(fullpname, 'w')
+
+ p=open(fullpname, 'wb')
  pickle.dump(data, p)
  p.close
 
@@ -125,7 +151,7 @@ if lgt == 3:
  h.write(towrite)
  h.close
 
- print 'Task', fname, 'succesfully initialized in', dname
+ print('Task', fname, 'succesfully initialized in', dname)
  exit(0)
 
 
@@ -133,7 +159,10 @@ if lgt == 3:
 # When not -i
 
 # Get project name and the paths
-fname=sys.argv[1]
+if sys.argv[1] == '-d':
+ fname=sys.argv[2]
+else:
+ fname=sys.argv[1]
 dname=os.path.expanduser('~/.a4t')
 fullpname=dname+'/'+fname+'.pkl'
 fullhname=dname+'/'+fname+'.txt'
@@ -141,48 +170,85 @@ fullhname=dname+'/'+fname+'.txt'
 # Test if files are there ok
 if not os.path.isfile(fullpname) or not os.path.isfile(fullhname):
  if not os.path.isfile(fullpname):
-  print 'The file', fullpname, 'is missing!'
+  print('The file', fullpname, 'is missing!')
  if not os.path.isfile(fullhname):
-  print 'The file', fullhname, 'is missing!'
+  print('The file', fullhname, 'is missing!')
  exit(0)
 
 # Read pickle file
-f=open(fullpname, 'r')
+f=open(fullpname, 'rb')
 data=pickle.load(f)
 f.close
 minv=data[0]
 oldquantity=data[1]
 oldportion=data[2]
 
-# Input current quantity
-while True:
- inp=raw_input('Please enter how many of this task you have before processing: ')
+# Test if we have a dir in the pickle file, initiate one if needed
+if sys.argv[1] == '-d':
  try:
-  quantity=int(inp)
-  if quantity >=0:
+  print('Using dir', data[3], 'for task', fname)
+ except:
+  data.append(input('No directory to count for task {} initiated, please enter one (relative to your home): '.format(fname)))
+
+ dircrel=data[3]
+# Check if dir is valid
+ while True:
+  dircname=os.path.expanduser('~/'+dircrel+'/')
+  if os.path.isdir(dircname):
    break
   else:
-   print 'Please enter a non-negative integer'
- except ValueError:
-  print 'Please enter a non-negative integer'
+   direx=input('{} doesn\'t exist, exit (x) or try again ([enter])?'.format(dircname))
+   if direx == 'x':
+    exit(0)
+   dircrel=input('Please enter directory to count (relative to your home):')
+
+# Now let's count the dir; no dotfiles please
+ quantity = sum([len([f for f in files if not f[0] == '.']) for r, d, files in os.walk(dircname)])
+ print('You have', quantity, 'items for task', fname, 'before processing.')
+
+else:
+ try:
+  print('Not using dir count', data[3], 'for task', fname)
+ except:
+  print('No directory to count for task', fname, 'initiated, you can set one up with the -d option.')
+ else:
+  dircrel=data[3]
+# Input current quantity
+ while True:
+  inp=input('Please enter how many of task {} you have before processing: '.format(fname))
+  try:
+   quantity=int(inp)
+   if quantity >=0:
+    break
+   else:
+    print('Please enter a non-negative integer')
+  except ValueError:
+   print('Please enter a non-negative integer')
 
 # Compute and print aim for today
 aim=quantity-oldportion
 if aim<minv:
  aim=minv
-print 'Aim for today:', int(aim)
+print('Aim for today:', int(aim))
 
 # Input completed quantity
-while True:
- inp=raw_input('Please enter how many of this task you have left after processing: ')
- try:
-  quantity=int(inp)
-  if quantity >=0:
+if sys.argv[1] == '-d':
+ while True:
+  dex=input('{} processing done (d)?'.format(dircname))
+  if dex == 'd':
    break
-  else:
-   print 'Please enter a non-negative integer'
- except ValueError:
-  print 'Please enter a non-negative integer'
+ quantity = sum([len([f for f in files if not f[0] == '.']) for r, d, files in os.walk(dircname)])
+else:
+ while True:
+  inp=input('Please enter how many of this task you have left after processing: ')
+  try:
+   quantity=int(inp)
+   if quantity >=0:
+    break
+   else:
+    print('Please enter a non-negative integer')
+  except ValueError:
+   print('Please enter a non-negative integer')
  
 # Compute the new portion
 ratio=float(quantity-minv+0.5)/(oldquantity-minv+0.5)
@@ -197,18 +263,27 @@ if factor<0.98 or quantity<=minv:
 portion=oldportion*factor
 portionint=int(math.ceil(portion))
 
-print oldquantity, '-->', quantity, '\nTomorrow\'s portion will be', portionint
-inp=raw_input('Does it look fine? y/n: ')
+print(oldquantity, '-->', quantity, '\nTomorrow\'s portion will be', portionint)
+inp=input('Does it look fine? y/n: ')
 try:
- if inp == 'y':
+ if (inp == 'y') or (inp == ""):
 
 # Write data out to pkl file
-  data=[0, 0, 0.0]
-  data[0]=minv
-  data[1]=quantity
-  data[2]=portion
+  try:
+   print('Using dir', dircrel)
+  except:
+   data=[0, 0, 0.0]
+   data[0]=minv
+   data[1]=quantity
+   data[2]=portion
+  else:
+   data=[0, 0, 0.0, 'a']
+   data[0]=minv
+   data[1]=quantity
+   data[2]=portion
+   data[3]=dircrel
 
-  p=open(fullpname, 'w')
+  p=open(fullpname, 'wb')
   pickle.dump(data, p)
   p.close
  
@@ -220,10 +295,10 @@ try:
  
 # Cat history file
   h=open(fullhname, 'r')
-  print h.read()
+  print(h.read())
   h.close
 
  else:
-  print 'I haven\'t done anything'
+  print('I haven\'t done anything')
 except:
- print 'I haven\'t done anything'
+ print('I haven\'t done anything')

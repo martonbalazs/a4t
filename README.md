@@ -39,6 +39,15 @@ and type in how many emails you have now. The script then tells you your goal
 for today. Try to achieve that and, when asked, proudly enter where you have
 just ended up with your task.
 
+```
+a4t -d [task name]
+```
+
+can use a directory count instead of manual entry of the number of emails,
+handy if you use maildir. Once the task is initialised with the -i option,
+invoke -d on the next run and the script will ask you to enter the directory
+which then will be remembered later.
+
 If you have Gnuplot installed, then plot_a4t gives you a graphical feedback on
 how the quantity of this task evolved in time.
 
