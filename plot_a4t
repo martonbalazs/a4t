@@ -9,7 +9,8 @@ if [ ! -f $infile ] ; then
  exit
 fi
 
-k=v3$elej`date +%N`
+#k=v3$elej`date +%N`
+k=v3$elej`date +%y%m%d_%H%M%S`_`strings /dev/urandom | tr -dc a-z-0-9 | tr -d - | head -c5`
 mkdir /tmp/$k
 chmod 700 /tmp/$k/
 
