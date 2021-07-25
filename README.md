@@ -48,6 +48,8 @@ handy if you use maildir. Once the task is initialised with the -i option,
 invoke -d on the next run and the script will ask you to enter the directory
 which then will be remembered later.
 
+If you have a `home/.hrut/hrut.pkl` file, see my repo `hrut` for details, then a4t will factor in that recommendation.
+
 If you have Gnuplot installed, then plot_a4t gives you a graphical feedback on
 how the quantity of this task evolved in time.
 

@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 # Data format: (minv, quantity, portion, optional dir relative to $HOME/)
+# Added hrut integration [2021-06-20 Sun]
+# Just uses plain hrut, no own file is assumed.
 
 import sys,os,stat,pickle,time,math
 
@@ -166,6 +168,7 @@ else:
 dname=os.path.expanduser('~/.a4t')
 fullpname=dname+'/'+fname+'.pkl'
 fullhname=dname+'/'+fname+'.txt'
+hrutfname=os.path.expanduser('~/.hrut/hrut.pkl')
 
 # Test if files are there ok
 if not os.path.isfile(fullpname) or not os.path.isfile(fullhname):
@@ -225,11 +228,27 @@ else:
   except ValueError:
    print('Please enter a non-negative integer')
 
+# Now deal with hrut, if exists.
+if os.path.isfile(hrutfname):
+ from subprocess import Popen, PIPE
+ process = Popen(["hrut"], stdout=PIPE)
+ (output, err) = process.communicate()
+ exit_code = process.wait()
+# print(type(output))
+# print(int(output))
+ hrutval=int(output)
+else:
+ hrutval=100
+
 # Compute and print aim for today
-aim=quantity-oldportion
+#aim=quantity-oldportion
+aim=quantity-(oldportion*hrutval/100)
 if aim<minv:
  aim=minv
-print('Aim for today:', int(aim))
+if (hrutval == 100):
+ print('Aim for today:', int(aim))
+else:
+ print('Aim for today:', int(aim), 'with hrut percent', hrutval, '%')
 
 # Input completed quantity
 if sys.argv[1] == '-d':
